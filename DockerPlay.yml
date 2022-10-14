@@ -1,0 +1,44 @@
+- name: Docker the latest version
+  remote_user: root
+  hosts: all
+
+
+  tasks:
+  - name: install conf manager
+    ansible.builtin.yum:
+      name: yum-utils
+
+  - name: add repo
+    shell: yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+    args:
+      creates: /etc/yum.repos.d/docker-ce.repo
+
+  - name: install packages
+    ansible.builtin.yum:
+      name: docker-ce,docker-ce-cli,containerd.io,python3,python3-requests
+      state: latest
+
+  - name: Start service docker, if not started
+    ansible.builtin.service:
+      name: docker
+      state: started
+
+  - name: Copy service files
+    ansible.builtin.copy:
+      src: ./service/
+      dest: /root/service/
+
+  - name: Build container
+    community.docker.docker_image:
+      name: service
+      build:
+        path: /root/service/
+        args:
+          listen_port: 8081
+      source: build
+  - name: start container
+    community.docker.docker_container:
+      name: runservice
+      image: service
+      ports:
+       - "8081:8081"
