@@ -4,14 +4,11 @@
 
 
   tasks:
-  - name: install conf manager
-    ansible.builtin.yum:
-      name: yum-utils
-
-  - name: add repo
-    shell: yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-    args:
-      creates: /etc/yum.repos.d/docker-ce.repo
+  - name: Add repository
+    ansible.builtin.yum_repository:
+      name: Docker
+      description: Docker YUM repo
+      baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
 
   - name: install packages
     ansible.builtin.yum:
@@ -22,7 +19,7 @@
     ansible.builtin.service:
       name: docker
       state: started
-
+      daemon_reload: True
   - name: Copy service files
     ansible.builtin.copy:
       src: ./service/
